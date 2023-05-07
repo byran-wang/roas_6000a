@@ -1,0 +1,27 @@
+# Overlay Development Image for TurtleBot3 Simulation
+FROM turtlebot3_base:latest
+
+# Create an overlay Catkin workspace
+RUN source /opt/ros/noetic/setup.bash \
+ && mkdir -p /overlay_ws/ \
+ && cd /overlay_ws 
+COPY ./6000a_ws/ /overlay_ws/6000a_ws/
+RUN source /opt/ros/noetic/setup.bash
+
+RUN wget -P /tmp https://coppeliarobotics.com/files/CoppeliaSim_Edu_V4_1_0_Ubuntu20_04.tar.xz
+RUN mv /tmp/CoppeliaSim_Edu_V4_1_0_Ubuntu20_04.tar.xz /overlay_ws/
+
+RUN cd /overlay_ws \
+ && tar -xf CoppeliaSim_Edu_V4_1_0_Ubuntu20_04.tar.xz \
+ && mv CoppeliaSim_Edu_V4_1_0_Ubuntu20_04 vrep \
+ && rm CoppeliaSim_Edu_V4_1_0_Ubuntu20_04.tar.xz \
+ && echo "export VREP_ROOT=/overlay_ws/vrep" >> ~/.bashrc \
+ && source ~/.bashrc
+#  && cd /overlay_ws \
+#  && catkin config --extend /turtlebot3_ws/devel \
+#  && catkin build
+
+# Set up the work directory and entrypoint
+WORKDIR /overlay_ws
+COPY ./docker/entrypoint.sh /
+ENTRYPOINT [ "/entrypoint.sh" ]
