@@ -8,6 +8,7 @@ RUN source /opt/ros/noetic/setup.bash \
 COPY ./6000a_ws/ /overlay_ws/6000a_ws/
 RUN source /opt/ros/noetic/setup.bash
 
+# Install Vrep
 RUN wget -P /tmp https://coppeliarobotics.com/files/CoppeliaSim_Edu_V4_1_0_Ubuntu20_04.tar.xz
 RUN mv /tmp/CoppeliaSim_Edu_V4_1_0_Ubuntu20_04.tar.xz /overlay_ws/
 
