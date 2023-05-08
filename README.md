@@ -1,4 +1,5 @@
 # This repo is adpoted from [TurtleBot3 Behavior Demos](https://github.com/sea-bass/turtlebot3_behavior_demos)
+[Reading this](https://roboticseabass.com/2021/04/21/docker-and-ros/) tutorial is stongly recommended before using this repo.
 
 ## Setup
 First, install Docker using [the official install guide](https://docs.docker.com/engine/install/ubuntu/).
@@ -33,3 +34,23 @@ To kill all running dockers
 ```
 make kill
 ```
+
+## For ROAS 6000A
+We also install [V-REP](https://www.coppeliarobotics.com/) here. Along with the following packages.
+
+```
+ros-noetic-gmapping 
+ros-noetic-navigation 
+ros-noetic-py-trees 
+ros-noetic-py-trees-ros 
+ros-noetic-rqt-py-trees
+```
+
+### To use vrep:
+```bash
+cd /overlay_ws/vrep/
+./coppeliaSim.sh 
+```
+
+### Mounted 6000a_ws
+The content of 6000a_ws is shared with your host machine and the container. Feel free to modify it in your host and build it in the container.
