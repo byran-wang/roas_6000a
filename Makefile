@@ -10,7 +10,7 @@
 
 # Command-line arguments
 TARGET_COLOR ?= blue    # Target color for behavior tree demo (red | green | blue)
-USE_GPU ?= false        # Use GPU devices (set to true if you have an NVIDIA GPU)
+USE_GPU ?= true        # Use GPU devices (set to true if you have an NVIDIA GPU)
 BT_TYPE ?= queue        # Behavior tree type (naive | queue)
 
 # Docker variables
