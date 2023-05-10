@@ -13,12 +13,28 @@ def log_d(str):
         print(str)
     else:
         rospy.loginfo(str)
-
+# rospy for the subscriber
 import rospy
+# ROS Image message
 from sensor_msgs.msg import Image
+# ROS Image message -> OpenCV2 image converter
+from cv_bridge import CvBridge, CvBridgeError
+# OpenCV2 for saving an image
+import cv2
+
+# Instantiate CvBridge
+bridge = CvBridge()
 def callback(data):
     # rospy.loginfo(rospy.get_caller_id() + "I heard %s", data.step)
     log_d(f'recv img {data.header.seq}')
+    try:
+        # Convert your ROS Image message to OpenCV2
+        cv2_img = bridge.imgmsg_to_cv2(data, "bgr8")
+    except Exception as e:
+        print(e)
+    else:
+        # Save your OpenCV2 image as a jpeg
+        cv2.imwrite('camera_image.jpeg', cv2_img)
 
 def listener():
 
