@@ -1,7 +1,24 @@
+import argparse
+parser = argparse.ArgumentParser()
+parser.add_argument("--IDE", type=bool)
+args = parser.parse_args()
+
+if args.IDE:
+    import sys
+    path_list = ('/home/simba/Documents/project/roas_6000a/6000a_ws/devel/lib/image_detection', '/opt/ros/noetic/lib/python3/dist-packages', '/usr/lib/python38.zip', '/usr/lib/python3.8', '/usr/lib/python3.8/lib-dynload', '/home/simba/.local/lib/python3.8/site-packages', '/usr/local/lib/python3.8/dist-packages', '/usr/lib/python3/dist-packages')
+    for p in path_list:
+        sys.path.append(p)
+def log_d(str):
+    if args.IDE:
+        print(str)
+    else:
+        rospy.loginfo(str)
+
 import rospy
 from sensor_msgs.msg import Image
 def callback(data):
-    rospy.loginfo(rospy.get_caller_id() + "I heard %s", data.step)
+    # rospy.loginfo(rospy.get_caller_id() + "I heard %s", data.step)
+    log_d(f'recv img {data.header.seq}')
 
 def listener():
 
