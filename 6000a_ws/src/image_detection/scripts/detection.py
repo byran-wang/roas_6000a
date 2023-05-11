@@ -63,19 +63,129 @@ class MarkerPublisher:
         self.publisher.publish(self.marker)
 
 
-def img_recv_callback(data):
-    # rospy.loginfo(rospy.get_caller_id() + "I heard %s", data.step)
-    log_d(f'recv img {data.header.seq}')
-    marker_pub.send_a_marker()
-    image_rcv.save_img(data)
-    # laser_switch_pub.swith()
+
 
 class ImageReceiver:
     def __init__(self, save_dir='./imgs'):
-        rospy.Subscriber("/vrep/image", Image, img_recv_callback)
+        self.subscriber = rospy.Subscriber("/vrep/image", Image, self.call_back)
+        self.publisher = rospy.Publisher('/visualization_marker', Marker, queue_size=10)
+        # ROS to CV imgage convert
+        self.bridge = CvBridge()
         self.save_dir = save_dir
         results_folder = Path(save_dir)
         results_folder.mkdir(parents=True, exist_ok=True)
+        ref_img_path = './imgs_ref/'
+        pictures_name = ["pic001", "pic002", "pic003", "pic004", "pic005"]
+        self.pictures = [cv2.imread(ref_img_path + name + ".jpg") for name in pictures_name]
+        # image detection init
+        self.orb_match_cnt = [0] * len(self.pictures)
+        self.square_cnt = [0] * len(self.pictures)
+        self.marked = [False] * len(self.pictures)
+
+        self.bf = cv2.BFMatcher()
+        # self.surf = cv2.xfeatures2d.SURF_create(400)
+        # Initialize the ORB detector
+        self.orb = cv2.ORB_create()
+        self.ref_kps, self.ref_descs = [], []
+
+        for i, picture in enumerate(self.pictures):
+            # picture = cv2.resize(picture, (400, 400), interpolation=cv2.INTER_AREA)
+            # k, d = self.surf.detectAndCompute(picture, None)
+            # Compute the keypoints and descriptors for both images
+            kp1, des1 = self.orb.detectAndCompute(picture, None)
+            picture = cv2.flip(picture, 1)
+            # kf, df = self.surf.detectAndCompute(picture, None)
+            kp1_f, des1_f = self.orb.detectAndCompute(picture, None)
+            self.ref_kps.append((kp1, kp1_f))
+            self.ref_descs.append((des1, des1_f))
+
+
+        self.markers = []
+        for i in range(len(pictures_name)):
+            marker = Marker()
+            marker.id = i
+            marker.header.frame_id = "/camera_link"
+            marker.type = marker.TEXT_VIEW_FACING
+            marker.action = marker.ADD
+            marker.scale.x = 0.5
+            marker.scale.y = 0.5
+            marker.scale.z = 0.5
+            marker.color.a = 1.0
+            marker.color.r = 1.0
+            marker.color.g = 0.0
+            marker.color.b = 0.0
+            marker.pose.orientation.w = 1.0
+            marker.text = pictures_name[i]
+            self.markers.append(marker)
+
+    def call_back(self, img):
+        # rospy.loginfo(rospy.get_caller_id() + "I heard %s", data.step)
+        log_d(f'recv img {img.header.seq}')
+
+        img = self.bridge.imgmsg_to_cv2(img, "bgr8")
+        id, cnt = self._best_fit(img)
+
+        if id == -1:
+            return
+
+        if (cnt < 120):
+            self.orb_match_cnt[id] = 0
+        else:
+            # rospy.loginfo(str(id))
+            self.orb_match_cnt[id] += 1
+
+        if(self.orb_match_cnt[id] >= 10 and not self.marked[id]):
+            self._show_mark(id, img)
+
+
+        # marker_pub.send_a_marker()
+        # image_rcv.save_img(data)
+        # laser_switch_pub.swith()
+
+    def _show_mark(self, id, img):
+        img_gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
+        _, img_BW = cv2.threshold(img_gray, 0, 255, cv2.THRESH_BINARY_INV + cv2.THRESH_OTSU)
+        _, contours, _ = cv2.findContours(img_BW, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_NONE)
+
+        x, y, w, h = cv2.boundingRect(max(contours, key=cv2.contourArea))
+        ratio = float(w) / h
+
+        if ratio > 1.1 and ratio < 0.5:
+            self.square_cnt[id] = 0
+        else:
+            self.square_cnt[id] += 1
+
+        if (self.square_cnt[id] >= 15):
+            self.markers[id].pose.position.x = 1 / math.tan(math.pi / 8 * h / img.shape[1]) * 0.5
+            self.markers[id].pose.position.y = (x + w / 2) / img.shape[1]
+            self.markers[id].pose.position.z = 0
+
+            self.publisher.publish(self.markers[id])
+            self.marked[id] = True
+
+    def _best_fit(self, img):
+        try:
+            best_id = -1
+            best = -1
+            # keypoint, descriptor = self.surf.detectAndCompute(img, None)
+            keypoint, descriptor = self.orb.detectAndCompute(img, None)
+
+            for i, ref_des in enumerate(self.ref_descs):
+                cur_cnt = 0
+
+                for ref_des_i in ref_des:
+                    result = self.bf.knnMatch(ref_des_i, descriptor, k=2)
+                    for m, n in result:
+                        if m.distance < 0.75 *n.distance:
+                            cur_cnt += 1
+
+                if cur_cnt > best:
+                    best = cur_cnt
+                    best_id = i
+
+            return best_id, best
+        except Exception as e:
+            return -1, -1
 
     def save_img(self, img, format="bgr8",is_save=False):
         try:
@@ -87,6 +197,9 @@ class ImageReceiver:
             # Save your OpenCV2 image as a jpeg
             if is_save:
                 cv2.imwrite(f'{self.save_dir}/camera_image_{img.header.seq}.jpeg', cv2_img)
+    def det_img(self, img, format="bgr8"):
+
+        return detect_id
 
 class LaserSwithPublisher():
     def __init__(self):
@@ -106,8 +219,8 @@ class LaserSwithPublisher():
 
 # send_a_marker(pub)
 # Instantiate CvBridge
-bridge = CvBridge()
-marker_pub = MarkerPublisher()
+# bridge = CvBridge()
+# marker_pub = MarkerPublisher()
 image_rcv = ImageReceiver()
 laser_switch_pub = LaserSwithPublisher()
 
