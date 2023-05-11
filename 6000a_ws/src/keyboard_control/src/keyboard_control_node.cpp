@@ -19,8 +19,11 @@
 class KeybardController
 {
 public:
-    KeybardController():linear_(0), angular_(0){
+    KeybardController():linear_(0), angular_(0), target_linear_velocity_(1), target_angular_velocity_(1){
         vel_pub_ = nh_.advertise<geometry_msgs::Twist>("/vrep/cmd_vel", 1);
+        nh_.param<double>("target_linear_velocity", target_linear_velocity_, 1);
+        nh_.param<double>("target_angular_velocity", target_angular_velocity_, 1);
+
     }
     void KeyLoop();
 
@@ -29,6 +32,8 @@ private:
     double linear_;
     double angular_;
     ros::Publisher vel_pub_;
+    double target_linear_velocity_;
+    double target_angular_velocity_;
 
 };
 
@@ -86,12 +91,12 @@ void KeybardController::KeyLoop()
             break;
         case KEYCODE_U:
             ROS_DEBUG("UP");
-            linear_ += 0.2;
+            linear_ = 1.0;
             dirty = true;
             break;
         case KEYCODE_D:
             ROS_DEBUG("DOWN");
-            linear_ -= 0.2;
+            linear_ = -1.0;
             dirty = true;
             break;
         case KEYCODE_S:
@@ -101,8 +106,8 @@ void KeybardController::KeyLoop()
         }
 
         geometry_msgs::Twist vel;
-        vel.linear.x = linear_;
-        vel.angular.z = angular_;
+        vel.linear.x = linear_ * target_linear_velocity_;
+        vel.angular.z = angular_ * target_angular_velocity_;
 
         if(dirty == true){
             vel_pub_.publish(vel);

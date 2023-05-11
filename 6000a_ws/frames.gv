@@ -1,0 +1,10 @@
+digraph G {
+"base_link" -> "laser_link"[label=" Broadcaster: /sim_ros_interface\nAverage rate: 20.202\nBuffer length: 4.95\nMost recent transform: 249.3\nOldest transform: 244.35\n"];
+"odom" -> "base_link"[label=" Broadcaster: /rf2o_laser_odometry\nAverage rate: 5.208\nBuffer length: 4.8\nMost recent transform: 249.25\nOldest transform: 244.45\n"];
+"base_link" -> "camera_link"[label=" Broadcaster: /sim_ros_interface\nAverage rate: 20.202\nBuffer length: 4.95\nMost recent transform: 249.3\nOldest transform: 244.35\n"];
+"map" -> "odom"[label=" Broadcaster: /slam_gmapping\nAverage rate: 16.327\nBuffer length: 4.9\nMost recent transform: 249.4\nOldest transform: 244.5\n"];
+edge [style=invis];
+ subgraph cluster_legend { style=bold; color=black; label ="view_frames Result";
+"Recorded at time: 249.350006104"[ shape=plaintext ] ;
+}->"map";
+}

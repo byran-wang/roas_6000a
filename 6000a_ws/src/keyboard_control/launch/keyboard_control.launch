@@ -1,0 +1,11 @@
+
+<launch>
+
+  <node pkg="keyboard_control" type="node" name="keyboard" output="screen">
+    <param name="target_linear_velocity" value="1.0"/>       
+    <param name="target_angular_velocity" value="1.0" />           
+  </node>
+
+  <include file="$(find rf2o_laser_odometry)/launch/rf2o_laser_odometry.launch" />
+  
+</launch>

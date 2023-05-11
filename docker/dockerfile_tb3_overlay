@@ -6,6 +6,7 @@ RUN source /opt/ros/noetic/setup.bash \
  && mkdir -p /overlay_ws/ \
  && cd /overlay_ws 
 COPY ./6000a_ws/ /overlay_ws/6000a_ws/
+RUN sudo apt-get install ros-${ROS_DISTRO}-tf2-tools ros-${ROS_DISTRO}-tf
 RUN source /opt/ros/noetic/setup.bash
 
 # Install Vrep

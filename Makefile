@@ -71,12 +71,19 @@ term:
 		${DOCKER_ARGS} ${IMAGE_NAME}_overlay \
 		bash
 
-# # Start basic simulation included with TurtleBot3 packages
-# .PHONY: sim
-# sim:
-# 	@docker run -it --net=host \
-# 		${DOCKER_ARGS} ${IMAGE_NAME}_overlay \
-# 		roslaunch turtlebot3_gazebo turtlebot3_world.launch
+# Start basic simulation included with TurtleBot3 packages
+.PHONY: roscore
+roscore:
+	@docker run -it --net=host \
+		${DOCKER_ARGS} ${IMAGE_NAME}_overlay \
+		roscore
+
+# Start basic simulation included with TurtleBot3 packages
+.PHONY: sim
+sim:
+	@docker run -it --net=host \
+		${DOCKER_ARGS} ${IMAGE_NAME}_overlay \
+		./vrep/coppeliaSim.sh 6000a_ws/env.ttt 
 
 # # Start Terminal for teleoperating the TurtleBot3
 # .PHONY: teleop
