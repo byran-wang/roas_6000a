@@ -33,6 +33,7 @@ import cv2
 from pathlib import Path
 
 from visualization_msgs.msg import Marker
+from std_msgs.msg import Bool
 
 
 class MarkerPublisher:
@@ -61,15 +62,16 @@ class MarkerPublisher:
         self.publisher.publish(self.marker)
 
 
-def callback(data):
+def img_recv_callback(data):
     # rospy.loginfo(rospy.get_caller_id() + "I heard %s", data.step)
     log_d(f'recv img {data.header.seq}')
     marker_pub.send_a_marker()
     image_rcv.save_img(data)
+    laser_switch_pub.swith()
 
 class ImageReceiver:
     def __init__(self, is_save=False, save_dir='./imgs'):
-        rospy.Subscriber("/vrep/image", Image, callback)
+        rospy.Subscriber("/vrep/image", Image, img_recv_callback)
         self.is_save = is_save
         self.save_dir = save_dir
         if is_save:
@@ -87,12 +89,29 @@ class ImageReceiver:
             if self.is_save:
                 cv2.imwrite(f'{self.save_dir}/camera_image_{img.header.seq}.jpeg', cv2_img)
 
+class LaserSwithPublisher():
+    def __init__(self, turn_off=False):
+        # Create a publisher that publishes to the /vrep/laser_switch topic.
+        self.pub = rospy.Publisher('/vrep/laser_switch', Bool, queue_size=10)
+        self.turn_off = turn_off
+
+    def swith(self):
+        # Create a message to turn off the laser.
+        msg = Bool()
+        if (self.turn_off):
+            msg.data = False
+        else:
+            msg.data = True
+            # Publish the message.
+        self.pub.publish(msg)
+
 
 # send_a_marker(pub)
 # Instantiate CvBridge
 bridge = CvBridge()
 marker_pub = MarkerPublisher()
 image_rcv = ImageReceiver(is_save=True)
+laser_switch_pub = LaserSwithPublisher(turn_off=False)
 
 def listener():
     # In ROS, nodes are uniquely named. If two nodes with the same
