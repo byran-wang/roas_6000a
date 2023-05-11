@@ -52,5 +52,14 @@ cd /overlay_ws/vrep/
 ./coppeliaSim.sh 
 ```
 
+### To use package:
+```bash
+cd /overlay_ws/6000a_ws/
+catkin catkin_make -DPYTHON_EXECUTABLE=/usr/bin/python3
+source devel/setup.bash
+rosun keyboard_control node
+rosun image_detection detection.py
+```
+
 ### Mounted 6000a_ws
 The content of 6000a_ws is shared with your host machine and the container. Feel free to modify it in your host and build it in the container.
