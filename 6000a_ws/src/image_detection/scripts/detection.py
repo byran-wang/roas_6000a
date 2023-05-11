@@ -68,18 +68,16 @@ def img_recv_callback(data):
     log_d(f'recv img {data.header.seq}')
     marker_pub.send_a_marker()
     image_rcv.save_img(data)
-    laser_switch_pub.swith()
+    # laser_switch_pub.swith()
 
 class ImageReceiver:
-    def __init__(self, is_save=False, save_dir='./imgs'):
+    def __init__(self, save_dir='./imgs'):
         rospy.Subscriber("/vrep/image", Image, img_recv_callback)
-        self.is_save = is_save
         self.save_dir = save_dir
-        if is_save:
-            results_folder = Path(save_dir)
-            results_folder.mkdir(parents=True, exist_ok=True)
+        results_folder = Path(save_dir)
+        results_folder.mkdir(parents=True, exist_ok=True)
 
-    def save_img(self, img, format="bgr8"):
+    def save_img(self, img, format="bgr8",is_save=False):
         try:
             # Convert your ROS Image message to OpenCV2
             cv2_img = bridge.imgmsg_to_cv2(img, format)
@@ -87,19 +85,18 @@ class ImageReceiver:
             print(e)
         else:
             # Save your OpenCV2 image as a jpeg
-            if self.is_save:
+            if is_save:
                 cv2.imwrite(f'{self.save_dir}/camera_image_{img.header.seq}.jpeg', cv2_img)
 
 class LaserSwithPublisher():
-    def __init__(self, turn_off=False):
+    def __init__(self):
         # Create a publisher that publishes to the /vrep/laser_switch topic.
         self.pub = rospy.Publisher('/vrep/laser_switch', Bool, queue_size=10)
-        self.turn_off = turn_off
 
-    def swith(self):
+    def swith(self, turn_off=False):
         # Create a message to turn off the laser.
         msg = Bool()
-        if (self.turn_off):
+        if (turn_off):
             msg.data = False
         else:
             msg.data = True
@@ -111,8 +108,8 @@ class LaserSwithPublisher():
 # Instantiate CvBridge
 bridge = CvBridge()
 marker_pub = MarkerPublisher()
-image_rcv = ImageReceiver(is_save=True)
-laser_switch_pub = LaserSwithPublisher(turn_off=False)
+image_rcv = ImageReceiver()
+laser_switch_pub = LaserSwithPublisher()
 
 def listener():
     # In ROS, nodes are uniquely named. If two nodes with the same
