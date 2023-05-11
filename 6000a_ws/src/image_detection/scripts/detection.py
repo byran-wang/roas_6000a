@@ -39,8 +39,9 @@ from std_msgs.msg import Bool
 class MarkerPublisher:
     def __init__(self):
         self.marker = Marker()
-        self.marker.header.frame_id = "base_link"  # !!!!!!!!!!!!!! should check frame name.
-        self.marker.type = self.marker.SPHERE
+        self.marker.header.frame_id = "camera_link"  # !!!!!!!!!!!!!! should check frame name.
+        self.marker.type = self.marker.TEXT_VIEW_FACING
+        self.marker.text = 'me'
         self.marker.action = self.marker.ADD
         self.marker.scale.x = 1
         self.marker.scale.y = 1
