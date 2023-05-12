@@ -3,6 +3,7 @@ import os
 
 parser = argparse.ArgumentParser()
 parser.add_argument("--IDE", type=bool)
+parser.add_argument("--DEBUG_LOCAL_IMAGE", type=bool)
 args = parser.parse_args()
 
 if args.IDE:
@@ -69,7 +70,8 @@ class MarkerPublisher:
 img_name = ''
 class ImageReceiver:
     def __init__(self, save_dir='./imgs'):
-        # self.subscriber = rospy.Subscriber("/vrep/image", Image, self.call_back)
+        if not args.DEBUG_LOCAL_IMAGE:
+            self.subscriber = rospy.Subscriber("/vrep/image", Image, self.call_back)
         self.publisher = rospy.Publisher('/visualization_marker', Marker, queue_size=10)
         # ROS to CV imgage convert
         self.bridge = CvBridge()
@@ -123,12 +125,12 @@ class ImageReceiver:
             self.markers.append(marker)
 
     def call_back(self, img):
-        # rospy.loginfo(rospy.get_caller_id() + "I heard %s", data.step)
         # log_d(f'recv img {img.header.seq}')
 
         # img = self.bridge.imgmsg_to_cv2(img, "bgr8")
-        # for i in range(5):
-        #     self.publisher.publish(self.markers[i])
+        if not args.DEBUG_LOCAL_IMAGE:
+            log_d(f'recv img {img.header.seq}')
+            img = self.bridge.imgmsg_to_cv2(img, "bgr8")
 
         match_id = -1
         global img_name
@@ -254,15 +256,17 @@ def listener():
     # name for our 'listener' node so that multiple listeners can
     # run simultaneously.
     rospy.init_node('img_detection', anonymous=True)
-    test_img_path = './record_imgs/imgs_figures'
-    all_files = os.listdir(test_img_path)
-    all_files.sort(key=lambda x: os.path.getmtime(os.path.join(test_img_path, x)))
-    global img_name
+    if args.DEBUG_LOCAL_IMAGE:
+        test_img_path = './record_imgs/imgs_figures'
+        all_files = os.listdir(test_img_path)
+        all_files.sort(key=lambda x: os.path.getmtime(os.path.join(test_img_path, x)))
+        global img_name
 
-    for img_file in all_files:
-        img_name = os.path.join(test_img_path,img_file)
-        img = cv2.imread(img_name)
-        image_rcv.call_back(img)
+        for img_file in all_files:
+            img_name = os.path.join(test_img_path,img_file)
+            img = cv2.imread(img_name)
+            image_rcv.call_back(img)
+
 
 
     # spin() simply keeps python from exiting until this node is stopped
