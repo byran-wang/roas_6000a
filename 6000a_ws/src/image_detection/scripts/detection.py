@@ -41,7 +41,7 @@ import math
 class MarkerPublisher:
     def __init__(self):
         self.marker = Marker()
-        self.marker.header.frame_id = "camera_link"  # !!!!!!!!!!!!!! should check frame name.
+        self.marker.header.frame_id = "base_link"  # !!!!!!!!!!!!!! should check frame name.
         self.marker.type = self.marker.TEXT_VIEW_FACING
         self.marker.text = 'me'
         self.marker.action = self.marker.ADD
@@ -126,6 +126,9 @@ class ImageReceiver:
         # log_d(f'recv img {img.header.seq}')
 
         # img = self.bridge.imgmsg_to_cv2(img, "bgr8")
+        # for i in range(5):
+        #     self.publisher.publish(self.markers[i])
+
         match_id = -1
         global img_name
         id, cnt = self._best_fit(img)
@@ -151,7 +154,7 @@ class ImageReceiver:
 
             if(self.match_cnt[id] >= 10 and not self.marked[id]):
                 match_id = id
-                self._show_mark(id, img)
+                # self._show_mark(id, img)
 
         if match_id > -1:
         # if 1:
@@ -254,8 +257,11 @@ def listener():
     all_files = os.listdir(test_img_path)
     all_files.sort(key=lambda x: os.path.getmtime(os.path.join(test_img_path, x)))
     global img_name
+    marker_pub = MarkerPublisher()
+
     for img_file in all_files:
         img_name = os.path.join(test_img_path,img_file)
+        marker_pub.send_a_marker()
         img = cv2.imread(img_name)
         image_rcv.call_back(img)
 
