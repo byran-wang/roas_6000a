@@ -35,6 +35,7 @@ from pathlib import Path
 
 from visualization_msgs.msg import Marker
 from std_msgs.msg import Bool
+import math
 
 
 class MarkerPublisher:
@@ -65,7 +66,7 @@ class MarkerPublisher:
 
 
 
-
+img_name = ''
 class ImageReceiver:
     def __init__(self, save_dir='./imgs'):
         # self.subscriber = rospy.Subscriber("/vrep/image", Image, self.call_back)
@@ -79,24 +80,25 @@ class ImageReceiver:
         pictures_name = ["pic001", "pic002", "pic003", "pic004", "pic005"]
         self.pictures = [cv2.imread(ref_img_path + name + ".jpg") for name in pictures_name]
         # image detection init
-        self.orb_match_cnt = [0] * len(self.pictures)
+        self.match_cnt = [0] * len(self.pictures)
         self.square_cnt = [0] * len(self.pictures)
         self.marked = [False] * len(self.pictures)
+        self.bg_det_cnt = 0
 
         self.bf = cv2.BFMatcher()
-        # self.surf = cv2.xfeatures2d.SURF_create(400)
         # Initialize the ORB detector
-        self.orb = cv2.ORB_create()
+        # self.orb = cv2.ORB_create()
+        self.surf = cv2.xfeatures2d.SURF_create(400)
         self.ref_kps, self.ref_descs = [], []
 
         for i, picture in enumerate(self.pictures):
-            # picture = cv2.resize(picture, (400, 400), interpolation=cv2.INTER_AREA)
-            # k, d = self.surf.detectAndCompute(picture, None)
+            picture = cv2.resize(picture, (400, 400), interpolation=cv2.INTER_AREA)
             # Compute the keypoints and descriptors for both images
-            kp1, des1 = self.orb.detectAndCompute(picture, None)
+            kp1, des1 = self.surf.detectAndCompute(picture, None)
+            # kp1, des1 = self.orb.detectAndCompute(picture, None)
             picture = cv2.flip(picture, 1)
-            # kf, df = self.surf.detectAndCompute(picture, None)
-            kp1_f, des1_f = self.orb.detectAndCompute(picture, None)
+            kp1_f, des1_f = self.surf.detectAndCompute(picture, None)
+            # kp1_f, des1_f = self.orb.detectAndCompute(picture, None)
             self.ref_kps.append((kp1, kp1_f))
             self.ref_descs.append((des1, des1_f))
 
@@ -124,23 +126,36 @@ class ImageReceiver:
         # log_d(f'recv img {img.header.seq}')
 
         # img = self.bridge.imgmsg_to_cv2(img, "bgr8")
+        match_id = -1
+        global img_name
         id, cnt = self._best_fit(img)
-
-        if id == -1:
+        if id < 0: # means error
             return
 
-        if (cnt < 15):
-            self.orb_match_cnt[id] = 0
+        if cnt < 35: # detect the background
+            self.match_cnt = [x - 2 if x > 0 else x for x in self.match_cnt]
+            self.match_cnt = [0 if x < 0 else x for x in self.match_cnt]
+            self.bg_det_cnt += 1
         else:
             # rospy.loginfo(str(id))
-            self.orb_match_cnt[id] += 1
+            log_d(f'match cnt is {self.match_cnt}, id {id}, cnt {cnt}')
+            self.bg_det_cnt = 0
+            for i in range(len(self.match_cnt)):
+                if i == id:
+                    if (self.match_cnt[i] < 10):
+                        self.match_cnt[i] += 1
+                else:
+                    self.match_cnt[i] -= 2
 
-        if(self.orb_match_cnt[id] >= 6 and not self.marked[id]):
-            match_id = id
-            # self._show_mark(id, img)
-        else:
-            match_id = -1
-        return id, cnt, match_id, self.orb_match_cnt[id]
+            self.match_cnt = [0 if x < 0 else x for x in self.match_cnt]
+
+            if(self.match_cnt[id] >= 10 and not self.marked[id]):
+                match_id = id
+                self._show_mark(id, img)
+
+        if match_id > -1:
+        # if 1:
+            log_d(f'img {img_name}, current match id {id} cnt {cnt}, continue match id {match_id}, cnt {self.match_cnt}')
 
 
         # marker_pub.send_a_marker()
@@ -171,9 +186,9 @@ class ImageReceiver:
     def _best_fit(self, img):
         try:
             best_id = -1
-            best = -1
-            # keypoint, descriptor = self.surf.detectAndCompute(img, None)
-            keypoint, descriptor = self.orb.detectAndCompute(img, None)
+            best_cnt = -1
+            keypoint, descriptor = self.surf.detectAndCompute(img, None)
+            # keypoint, descriptor = self.orb.detectAndCompute(img, None)
 
             for i, ref_des in enumerate(self.ref_descs):
                 cur_cnt = 0
@@ -181,14 +196,13 @@ class ImageReceiver:
                 for ref_des_i in ref_des:
                     result = self.bf.knnMatch(ref_des_i, descriptor, k=2)
                     for m, n in result:
-                        if m.distance < 0.75 *n.distance:
+                        if m.distance < 0.5 *n.distance:
                             cur_cnt += 1
 
-                if cur_cnt > best:
-                    best = cur_cnt
+                if cur_cnt > best_cnt:
+                    best_cnt = cur_cnt
                     best_id = i
-
-            return best_id, best
+            return best_id, best_cnt
         except Exception as e:
             return -1, -1
 
@@ -239,13 +253,12 @@ def listener():
     test_img_path = './record_imgs/imgs_figures'
     all_files = os.listdir(test_img_path)
     all_files.sort(key=lambda x: os.path.getmtime(os.path.join(test_img_path, x)))
+    global img_name
     for img_file in all_files:
         img_name = os.path.join(test_img_path,img_file)
         img = cv2.imread(img_name)
-        id, cnt, match_id, match_cnt = image_rcv.call_back(img)
-        # if match_id > -1:
-        if 1:
-            log_d(f'img {img_name}, current match id {id} cnt {cnt}, continue match id {match_id}, cnt {match_cnt}')
+        image_rcv.call_back(img)
+
 
     # spin() simply keeps python from exiting until this node is stopped
     rospy.spin()
