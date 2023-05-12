@@ -9,7 +9,7 @@
   <include file="$(find rf2o_laser_odometry)/launch/rf2o_laser_odometry.launch" />
   
   <node pkg="gmapping" type="slam_gmapping" name="gmapping" output="screen">
-    <param name="scan", value="/vrep/scan"/>
-    <param name="map_update_interval" value="0.2">
+    <param name="scan" value="/vrep/scan"/>
+    <param name="map_update_interval" value="0.2"/>
   </node>
 </launch>
