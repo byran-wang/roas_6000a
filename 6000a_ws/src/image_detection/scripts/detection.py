@@ -257,11 +257,9 @@ def listener():
     all_files = os.listdir(test_img_path)
     all_files.sort(key=lambda x: os.path.getmtime(os.path.join(test_img_path, x)))
     global img_name
-    marker_pub = MarkerPublisher()
 
     for img_file in all_files:
         img_name = os.path.join(test_img_path,img_file)
-        marker_pub.send_a_marker()
         img = cv2.imread(img_name)
         image_rcv.call_back(img)
 
