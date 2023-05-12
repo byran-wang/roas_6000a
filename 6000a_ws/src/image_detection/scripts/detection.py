@@ -41,7 +41,7 @@ import math
 class MarkerPublisher:
     def __init__(self):
         self.marker = Marker()
-        self.marker.header.frame_id = "base_link"  # !!!!!!!!!!!!!! should check frame name.
+        self.marker.header.frame_id = "camera_link"  # !!!!!!!!!!!!!! should check frame name.
         self.marker.type = self.marker.TEXT_VIEW_FACING
         self.marker.text = 'me'
         self.marker.action = self.marker.ADD
@@ -107,7 +107,7 @@ class ImageReceiver:
         for i in range(len(pictures_name)):
             marker = Marker()
             marker.id = i
-            marker.header.frame_id = "/camera_link"
+            marker.header.frame_id = "camera_link"
             marker.type = marker.TEXT_VIEW_FACING
             marker.action = marker.ADD
             marker.scale.x = 0.5
