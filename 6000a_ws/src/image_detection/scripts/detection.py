@@ -78,6 +78,7 @@ class ImageReceiver:
         results_folder.mkdir(parents=True, exist_ok=True)
         ref_img_path = './imgs_ref/'
         pictures_name = ["pic001", "pic002", "pic003", "pic004", "pic005"]
+        marker_name = ["obama", "green hair girl", "super brother", "yellow hair boy", "cartoon boy"]
         self.pictures = [cv2.imread(ref_img_path + name + ".jpg") for name in pictures_name]
         # image detection init
         self.match_cnt = [0] * len(self.pictures)
@@ -118,7 +119,7 @@ class ImageReceiver:
             marker.color.g = 0.0
             marker.color.b = 0.0
             marker.pose.orientation.w = 1.0
-            marker.text = pictures_name[i]
+            marker.text = marker_name[i]
             self.markers.append(marker)
 
     def call_back(self, img):
@@ -154,7 +155,7 @@ class ImageReceiver:
 
             if(self.match_cnt[id] >= 10 and not self.marked[id]):
                 match_id = id
-                # self._show_mark(id, img)
+                self._show_mark(id, img)
 
         if match_id > -1:
         # if 1:
