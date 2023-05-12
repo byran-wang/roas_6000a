@@ -1,4 +1,5 @@
 import argparse
+import os
 
 parser = argparse.ArgumentParser()
 parser.add_argument("--IDE", type=bool)
@@ -67,7 +68,7 @@ class MarkerPublisher:
 
 class ImageReceiver:
     def __init__(self, save_dir='./imgs'):
-        self.subscriber = rospy.Subscriber("/vrep/image", Image, self.call_back)
+        # self.subscriber = rospy.Subscriber("/vrep/image", Image, self.call_back)
         self.publisher = rospy.Publisher('/visualization_marker', Marker, queue_size=10)
         # ROS to CV imgage convert
         self.bridge = CvBridge()
@@ -120,22 +121,26 @@ class ImageReceiver:
 
     def call_back(self, img):
         # rospy.loginfo(rospy.get_caller_id() + "I heard %s", data.step)
-        log_d(f'recv img {img.header.seq}')
+        # log_d(f'recv img {img.header.seq}')
 
-        img = self.bridge.imgmsg_to_cv2(img, "bgr8")
+        # img = self.bridge.imgmsg_to_cv2(img, "bgr8")
         id, cnt = self._best_fit(img)
 
         if id == -1:
             return
 
-        if (cnt < 120):
+        if (cnt < 15):
             self.orb_match_cnt[id] = 0
         else:
             # rospy.loginfo(str(id))
             self.orb_match_cnt[id] += 1
 
-        if(self.orb_match_cnt[id] >= 10 and not self.marked[id]):
-            self._show_mark(id, img)
+        if(self.orb_match_cnt[id] >= 6 and not self.marked[id]):
+            match_id = id
+            # self._show_mark(id, img)
+        else:
+            match_id = -1
+        return id, cnt, match_id, self.orb_match_cnt[id]
 
 
         # marker_pub.send_a_marker()
@@ -231,6 +236,17 @@ def listener():
     # name for our 'listener' node so that multiple listeners can
     # run simultaneously.
     rospy.init_node('img_detection', anonymous=True)
+    test_img_path = './record_imgs/imgs_figures'
+    all_files = os.listdir(test_img_path)
+    all_files.sort(key=lambda x: os.path.getmtime(os.path.join(test_img_path, x)))
+    for img_file in all_files:
+        img_name = os.path.join(test_img_path,img_file)
+        img = cv2.imread(img_name)
+        id, cnt, match_id, match_cnt = image_rcv.call_back(img)
+        # if match_id > -1:
+        if 1:
+            log_d(f'img {img_name}, current match id {id} cnt {cnt}, continue match id {match_id}, cnt {match_cnt}')
+
     # spin() simply keeps python from exiting until this node is stopped
     rospy.spin()
 
