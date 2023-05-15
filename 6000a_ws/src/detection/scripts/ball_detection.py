@@ -90,9 +90,9 @@ class ImageReceiver:
             radius = int(math.sqrt(largest_area / math.pi))
             log_d(f'detected ball in image {img_seq} with radius {radius}, centroid {cX:.2f},{cY:.2f}')
             msg = Point()
-            msg.x = cX
-            msg.y = cY
-            msg.z = radius  # use the 'z' field for the radius
+            msg.x = cX # centroid X
+            msg.y = cY  # centroid Y
+            msg.z = radius  # ball radius
 
             self.publisher.publish(msg)
             # self._save_debug_contour_img(img, best_c, cX, cY, radius, img_seq)
