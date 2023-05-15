@@ -36,7 +36,8 @@ from pathlib import Path
 from visualization_msgs.msg import Marker
 from std_msgs.msg import Bool
 import math
-
+import numpy as np
+# import matplotlib.pyplot as plt
 
 img_name = ''
 class ImageReceiver:
@@ -50,9 +51,56 @@ class ImageReceiver:
         results_folder.mkdir(parents=True, exist_ok=True)
 
     def call_back(self, img):
-        if not args.DEBUG_LOCAL_IMAGE:
-            log_d(f'recv img {img.header.seq}')
-            img = self.bridge.imgmsg_to_cv2(img, "bgr8")
+        global img_name
+        try:
+            if not args.DEBUG_LOCAL_IMAGE:
+                log_d(f'recv img {img.header.seq}')
+                img_seq =  img.header.seq
+                img = self.bridge.imgmsg_to_cv2(img, "bgr8")
+            else:
+                img_seq = img_name.split('/')[-1].split('.jpeg')[0].split('_')[-1]
+            img = cv2.flip(img, 1)
+            # convert to hsv space
+            hsv = cv2.cvtColor(img, cv2.COLOR_BGR2HSV)
+            #mask ball image
+            lower_yellow = np.array([20, 100, 100])
+            upper_yellow = np.array([30, 255, 255])
+            mask = cv2.inRange(hsv, lower_yellow, upper_yellow)
+            # find ball contour
+            (_, contours, _) = cv2.findContours(mask, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
+
+            if len(contours) < 1:
+                return
+
+            # locate centroid of ball
+            # largest_perimeter = 0.0
+            largest_area = 0.0
+            for c in contours:
+                area = cv2.contourArea(c)
+                # log_d(f'img {img_seq}, perimeter {cv2.arcLength(c, True)}, Area {area}')
+                if (cv2.contourArea(c) > largest_area):
+                    best_c = c
+                    largest_area = area
+
+            M = cv2.moments(best_c)
+            cX = float(M["m10"] / M["m00"])
+            cY = float(M["m01"] / M["m00"])
+            radius = int(math.sqrt(largest_area / math.pi))
+            log_d(f'detected ball in image {img_seq} with radius {radius}, centroid {cX:.2f},{cY:.2f}')
+            # self._save_debug_contour_img(img, best_c, cX, cY, radius, img_seq)
+        except Exception as e:
+            print(e)
+    def _save_debug_contour_img(self, img, contours, cX, cY, radius, img_seq):
+        # Draw all contours on a copy of the original image
+        contour_image = np.copy(img)
+        # To draw all the contours in an image
+        cv2.drawContours(contour_image, contours, -1, (0, 0, 255), 3)
+        cv2.circle(contour_image, (int(cX), int(cY)), 3, (255, 0, 0), -1)
+        cv2.circle(contour_image, (int(cX), int(cY)), int(radius), (255, 0, 0), 2)
+        cv2.putText(contour_image, "centroid", (int(cX) - 25, int(cY) - 25), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (255, 0, 0), 2)
+        # Convert color space for displaying the result with matplotlib
+        # contour_image = cv2.cvtColor(contour_image, cv2.COLOR_BGR2RGB)
+        cv2.imwrite(f'{self.save_dir}/contours_{img_seq}.jpg', contour_image)
 
 rospy.init_node('img_detection', anonymous=True)
 image_rcv = ImageReceiver()
