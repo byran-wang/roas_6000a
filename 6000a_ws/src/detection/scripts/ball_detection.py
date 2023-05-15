@@ -37,6 +37,7 @@ from visualization_msgs.msg import Marker
 from std_msgs.msg import Bool
 import math
 import numpy as np
+from geometry_msgs.msg import Point
 # import matplotlib.pyplot as plt
 
 img_name = ''
@@ -44,6 +45,7 @@ class ImageReceiver:
     def __init__(self, save_dir='./imgs'):
         if not args.DEBUG_LOCAL_IMAGE:
             self.subscriber = rospy.Subscriber("/vrep/image", Image, self.call_back)
+        self.publisher = rospy.Publisher('ball_centroid_and_radius', Point, queue_size=10)
         # ROS to CV imgage convert
         self.bridge = CvBridge()
         self.save_dir = save_dir
@@ -87,6 +89,12 @@ class ImageReceiver:
             cY = float(M["m01"] / M["m00"])
             radius = int(math.sqrt(largest_area / math.pi))
             log_d(f'detected ball in image {img_seq} with radius {radius}, centroid {cX:.2f},{cY:.2f}')
+            msg = Point()
+            msg.x = cX
+            msg.y = cY
+            msg.z = radius  # use the 'z' field for the radius
+
+            self.publisher.publish(msg)
             # self._save_debug_contour_img(img, best_c, cX, cY, radius, img_seq)
         except Exception as e:
             print(e)
