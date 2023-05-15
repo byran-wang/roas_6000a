@@ -9,9 +9,9 @@ args = parser.parse_args()
 if args.IDE:
     import sys
 
-    path_list = ('/home/simba/Documents/project/roas_6000a/6000a_ws/devel/lib/image_detection',
+    path_list = ('~/Documents/project/roas_6000a/6000a_ws/devel/lib/detection',
                  '/opt/ros/noetic/lib/python3/dist-packages', '/usr/lib/python38.zip', '/usr/lib/python3.8',
-                 '/usr/lib/python3.8/lib-dynload', '/home/simba/.local/lib/python3.8/site-packages',
+                 '/usr/lib/python3.8/lib-dynload', '~/.local/lib/python3.8/site-packages',
                  '/usr/local/lib/python3.8/dist-packages', '/usr/lib/python3/dist-packages')
     for p in path_list:
         sys.path.append(p)
@@ -105,6 +105,7 @@ class ImageReceiver:
             self.ref_kps.append((kp1, kp1_f))
             self.ref_descs.append((des1, des1_f))
 
+        log_d(f'surf features of the reference images in {ref_img_path} folder calculated OK')
 
         self.markers = []
         for i in range(len(pictures_name)):
@@ -123,6 +124,8 @@ class ImageReceiver:
             marker.pose.orientation.w = 1.0
             marker.text = marker_name[i]
             self.markers.append(marker)
+        log_d('markers will send to camera_link')
+        log_d('waiting for the images from vrep ...')
 
     def call_back(self, img):
         # log_d(f'recv img {img.header.seq}')
@@ -246,6 +249,7 @@ class LaserSwithPublisher():
 # Instantiate CvBridge
 # bridge = CvBridge()
 # marker_pub = MarkerPublisher()
+rospy.init_node('img_detection', anonymous=True)
 image_rcv = ImageReceiver()
 laser_switch_pub = LaserSwithPublisher()
 
@@ -255,7 +259,7 @@ def listener():
     # anonymous=True flag means that rospy will choose a unique
     # name for our 'listener' node so that multiple listeners can
     # run simultaneously.
-    rospy.init_node('img_detection', anonymous=True)
+
     if args.DEBUG_LOCAL_IMAGE:
         test_img_path = './record_imgs/imgs_figures'
         all_files = os.listdir(test_img_path)
