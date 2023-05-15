@@ -1,15 +1,8 @@
 
 <launch>
 
-  <node pkg="keyboard_control" type="node" name="keyboard" output="screen">
-    <param name="target_linear_velocity" value="1.0"/>       
-    <param name="target_angular_velocity" value="1.0" />           
-  </node>
-
-  <include file="$(find rf2o_laser_odometry)/launch/rf2o_laser_odometry.launch" />
-  
-  <node pkg="gmapping" type="slam_gmapping" name="gmapping" output="screen">
-    <param name="scan" value="/vrep/scan"/>
-    <param name="map_update_interval" value="0.2"/>
+  <node pkg="keyboard_control" type="keyboard_control_node" name="keyboard" output="screen">
+    <param name="target_linear_velocity" value="2.0"/>       
+    <param name="target_angular_velocity" value="2.0" />           
   </node>
 </launch>
