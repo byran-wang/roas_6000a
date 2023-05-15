@@ -48,7 +48,6 @@ ros-noetic-rqt-py-trees
 ### install python and opencv
 ```bash
 conda create --name py3_6 python=3.6
-conda activate py3_6
 pip install opencv-python==3.4.2.17
 pip install opencv-contrib-python==3.4.2.17
 pip install PyYAML
@@ -67,8 +66,9 @@ cd /overlay_ws/6000a_ws/
 catkin catkin_make -DPYTHON_EXECUTABLE=~/anaconda3/envs/py3_6/bin/python
 source devel/setup.bash
 rosun keyboard_control node
-cd 6000a_ws/src/detection/scripts
-python image_detection.py
+conda activate py3_6
+cd 6000a_ws/src/detection/scripts && python image_detection.py
+cd 6000a_ws/src/detection/scripts && python ball_detection.py
 ```
 
 ### Mounted 6000a_ws
