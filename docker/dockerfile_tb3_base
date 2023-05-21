@@ -13,8 +13,6 @@ RUN apt-get update && apt-get install -y \
   python3-pip \
   python3-tk \
   wget
-
-RUN apt install vim
 # Install additional ROS packages
 RUN apt-get install -y \
   ros-noetic-gmapping \

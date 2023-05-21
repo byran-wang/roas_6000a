@@ -6,7 +6,7 @@ RUN source /opt/ros/noetic/setup.bash \
  && mkdir -p /overlay_ws/ \
  && cd /overlay_ws 
 COPY ./6000a_ws/ /overlay_ws/6000a_ws/
-RUN sudo apt-get install ros-${ROS_DISTRO}-tf2-tools ros-${ROS_DISTRO}-tf
+RUN apt-get install -y ros-noetic-tf2-tools ros-noetic-tf
 RUN source /opt/ros/noetic/setup.bash
 
 # Install Vrep
@@ -19,11 +19,3 @@ RUN cd /overlay_ws \
  && rm CoppeliaSim_Edu_V4_1_0_Ubuntu20_04.tar.xz \
  && echo "export VREP_ROOT=/overlay_ws/vrep" >> ~/.bashrc \
  && source ~/.bashrc
-#  && cd /overlay_ws \
-#  && catkin config --extend /turtlebot3_ws/devel \
-#  && catkin build
-
-# Set up the work directory and entrypoint
-WORKDIR /overlay_ws
-COPY ./docker/entrypoint.sh /
-ENTRYPOINT [ "/entrypoint.sh" ]

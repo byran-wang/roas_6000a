@@ -18,6 +18,7 @@ IMAGE_NAME = turtlebot3
 CORE_DOCKERFILE = ${PWD}/docker/dockerfile_nvidia_ros
 BASE_DOCKERFILE = ${PWD}/docker/dockerfile_tb3_base
 OVERLAY_DOCKERFILE = ${PWD}/docker/dockerfile_tb3_overlay
+6000a_DOCKERFILE = ${PWD}/docker/dockerfile_roas_6000a
 
 # Set Docker volumes and environment variables
 # --volume="${PWD}/tb3_autonomy":"/overlay_ws/src/tb3_autonomy":rw \
@@ -50,15 +51,19 @@ build-base: build-core
 	@docker build -f ${BASE_DOCKERFILE} -t ${IMAGE_NAME}_base .
 
 # Build the overlay image (depends on base image build)
-.PHONY: build
-build: build-base
+.PHONY: build-overlay
+build-overlay: build-base
 	@docker build -f ${OVERLAY_DOCKERFILE} -t ${IMAGE_NAME}_overlay .
+
+.PHONY: build
+build: build-overlay
+	@docker build -f ${6000a_DOCKERFILE} -t ${IMAGE_NAME}_6000a .
 
 # Kill any running Docker containers
 .PHONY: kill
 kill:
 	@echo "Closing all running Docker containers:"
-	@docker kill $(shell docker ps -q --filter ancestor=${IMAGE_NAME}_overlay)
+	@docker kill $(shell docker ps -q --filter ancestor=${IMAGE_NAME}_6000a)
 
 
 ###########
@@ -68,21 +73,21 @@ kill:
 .PHONY: term
 term:
 	@docker run -it --net=host \
-		${DOCKER_ARGS} ${IMAGE_NAME}_overlay \
+		${DOCKER_ARGS} ${IMAGE_NAME}_6000a \
 		bash
 
 # Start basic simulation included with TurtleBot3 packages
 .PHONY: roscore
 roscore:
 	@docker run -it --net=host \
-		${DOCKER_ARGS} ${IMAGE_NAME}_overlay \
+		${DOCKER_ARGS} ${IMAGE_NAME}_6000a \
 		roscore
 
 # Start basic simulation included with TurtleBot3 packages
 .PHONY: sim
 sim:
 	@docker run -it --net=host \
-		${DOCKER_ARGS} ${IMAGE_NAME}_overlay \
+		${DOCKER_ARGS} ${IMAGE_NAME}_6000a \
 		./vrep/coppeliaSim.sh 6000a_ws/env.ttt 
 
 # # Start Terminal for teleoperating the TurtleBot3
