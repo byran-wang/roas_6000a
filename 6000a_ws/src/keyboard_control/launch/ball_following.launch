@@ -1,0 +1,7 @@
+
+<launch>
+  <node pkg="keyboard_control" type="ball_following_node" name="keyboard" output="screen">
+    <param name="p_v" value="0.1"/>       
+    <param name="p_w" value="0.01" />           
+  </node>
+</launch>

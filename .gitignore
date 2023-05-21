@@ -56,6 +56,7 @@ devel_isolated/
 /cfg/cpp/
 /cfg/*.py
 
+*.tar.xz
 # Ignore generated docs
 *.dox
 *.wikidoc

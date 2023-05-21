@@ -10,10 +10,10 @@ RUN apt-get install -y ros-noetic-tf2-tools ros-noetic-tf
 RUN source /opt/ros/noetic/setup.bash
 
 # Install Vrep
-RUN wget -P /tmp https://coppeliarobotics.com/files/CoppeliaSim_Edu_V4_1_0_Ubuntu20_04.tar.xz
-RUN mv /tmp/CoppeliaSim_Edu_V4_1_0_Ubuntu20_04.tar.xz /overlay_ws/
+#RUN wget -P /tmp https://coppeliarobotics.com/files/CoppeliaSim_Edu_V4_1_0_Ubuntu20_04.tar.xz
+RUN mv /overlay_ws/6000a_ws/CoppeliaSim_Edu_V4_1_0_Ubuntu20_04.tar.xz /overlay_ws/
 
-RUN cd /overlay_ws \
+RUN cd /overlay_ws/ \
  && tar -xf CoppeliaSim_Edu_V4_1_0_Ubuntu20_04.tar.xz \
  && mv CoppeliaSim_Edu_V4_1_0_Ubuntu20_04 vrep \
  && rm CoppeliaSim_Edu_V4_1_0_Ubuntu20_04.tar.xz \

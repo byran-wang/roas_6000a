@@ -2,7 +2,7 @@
 <launch>
 
   <node pkg="keyboard_control" type="keyboard_control_node" name="keyboard" output="screen">
-    <param name="target_linear_velocity" value="2.0"/>       
-    <param name="target_angular_velocity" value="2.0" />           
+    <param name="target_linear_velocity" value="3.0"/>       
+    <param name="target_angular_velocity" value="3.0" />           
   </node>
 </launch>

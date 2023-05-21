@@ -47,13 +47,17 @@ include_directories(
 ## The recommended prefix ensures that target names across packages don't collide
 add_executable(keyboard_control_node src/keyboard_control_node.cpp)
 add_executable(identify_area_node src/identify_area_node.cpp)
-
+add_executable(ball_following_node src/ball_following_node.cpp)
 ## Specify libraries to link a library or executable target against
 target_link_libraries(keyboard_control_node
   ${catkin_LIBRARIES}
 )
 
 target_link_libraries(identify_area_node
+  ${catkin_LIBRARIES}
+)
+
+target_link_libraries(ball_following_node
   ${catkin_LIBRARIES}
 )
 
@@ -73,7 +77,7 @@ target_link_libraries(identify_area_node
 
 ## Mark executables for installation
 ## See http://docs.ros.org/melodic/api/catkin/html/howto/format1/building_executables.html
-install(TARGETS keyboard_control_node identify_area_node
+install(TARGETS keyboard_control_node identify_area_node ball_following_node
   RUNTIME DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
 )
 
@@ -92,12 +96,14 @@ install(TARGETS keyboard_control_node identify_area_node
 #   PATTERN ".svn" EXCLUDE
 # )
 
-## Mark other files for installation (e.g. launch and bag files, etc.)
-# install(FILES
-#   # myfile1
-#   # myfile2
-#   DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION}
-# )
+# Mark other files for installation (e.g. launch and bag files, etc.)
+install(FILES
+  launch/ball_following.launch
+  launch/keyboard_control.launch
+  launch/slam.launch
+  # myfile2
+  DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION}
+)
 
 #############
 ## Testing ##
